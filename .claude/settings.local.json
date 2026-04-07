@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:developer.nulab.com)",
+      "Bash(git -C D:/ai-tools/backlog-mcp-server ls-files)",
+      "Bash(git -C /d/ai-tools/backlog-mcp-server status)",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "Bash(node dist/index.js)",
+      "Bash(node:*)"
+    ]
+  }
+}

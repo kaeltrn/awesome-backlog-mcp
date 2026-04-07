@@ -1,0 +1,49 @@
+{
+  "name": "awesome-backlog-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for Nulab Backlog API — manage issues, comments, wikis, pull requests, and notifications via Claude or any MCP client",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "awesome-backlog-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "backlog",
+    "nulab",
+    "claude",
+    "model-context-protocol",
+    "issues",
+    "project-management"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kaeltrn/awesome-backlog-mcp.git"
+  },
+  "homepage": "https://github.com/kaeltrn/awesome-backlog-mcp#readme",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.6.1",
+    "axios": "^1.7.9",
+    "form-data": "^4.0.5",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
