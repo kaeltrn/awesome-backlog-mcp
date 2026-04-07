@@ -18,8 +18,9 @@ export function registerCommentTools(server) {
 
 Args:
   - issue_key (required): Issue ID or key (e.g., "MYPROJ-123")
-  - limit (optional): Max comments to return (1-100, default 20)
-  - offset (optional): Pagination offset (default 0)
+  - count (optional): Max comments to return (1-200, default 20)
+  - min_id (optional): Return comments with ID greater than this value (for pagination forward)
+  - max_id (optional): Return comments with ID less than this value (for pagination backward)
   - order (optional): "asc" or "desc" (default "desc" = newest first)
   - response_format: 'markdown' (default) or 'json'
 
@@ -28,19 +29,25 @@ Returns: List of comments with author, timestamp, and content`,
             issue_key: z
                 .union([z.string(), z.number()])
                 .describe("Issue ID or key (e.g., 'MYPROJ-123')"),
-            limit: z
+            count: z
                 .number()
                 .int()
                 .min(1)
-                .max(100)
+                .max(200)
                 .default(20)
-                .describe("Max comments to return (1-100, default 20)"),
-            offset: z
+                .describe("Max comments to return (1-200, default 20)"),
+            min_id: z
                 .number()
                 .int()
-                .min(0)
-                .default(0)
-                .describe("Pagination offset (default 0)"),
+                .positive()
+                .optional()
+                .describe("Return comments with ID greater than this (pagination: get next page)"),
+            max_id: z
+                .number()
+                .int()
+                .positive()
+                .optional()
+                .describe("Return comments with ID less than this (pagination: get previous page)"),
             order: z
                 .enum(["asc", "desc"])
                 .default("desc")
@@ -56,9 +63,14 @@ Returns: List of comments with author, timestamp, and content`,
             idempotentHint: true,
             openWorldHint: true,
         },
-    }, async ({ issue_key, limit, offset, order, response_format }) => {
+    }, async ({ issue_key, count, min_id, max_id, order, response_format }) => {
         try {
-            const comments = await apiGet(`/issues/${issue_key}/comments`, { count: limit, offset, order });
+            const params = { count, order };
+            if (min_id !== undefined)
+                params["minId"] = min_id;
+            if (max_id !== undefined)
+                params["maxId"] = max_id;
+            const comments = await apiGet(`/issues/${issue_key}/comments`, params);
             if (response_format === ResponseFormat.JSON) {
                 return { content: [{ type: "text", text: jsonOutput(comments) }] };
             }
@@ -72,8 +84,9 @@ Returns: List of comments with author, timestamp, and content`,
                 "",
                 ...comments.flatMap((c) => [formatComment(c), ""]),
             ];
-            if (comments.length === limit) {
-                lines.push(`> Use offset: ${offset + limit} to see more comments.`);
+            if (comments.length === count) {
+                const lastId = comments[comments.length - 1].id;
+                lines.push(`> To see older comments, use max_id: ${lastId}`);
             }
             return {
                 content: [
