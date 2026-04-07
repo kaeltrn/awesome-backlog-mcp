@@ -17,7 +17,7 @@ export function registerCommentTools(server) {
         description: `Returns comments for a specific issue.
 
 Args:
-  - issue_id_or_key (required): Issue ID or key (e.g., "MYPROJ-123")
+  - issue_key (required): Issue ID or key (e.g., "MYPROJ-123")
   - limit (optional): Max comments to return (1-100, default 20)
   - offset (optional): Pagination offset (default 0)
   - order (optional): "asc" or "desc" (default "desc" = newest first)
@@ -25,7 +25,7 @@ Args:
 
 Returns: List of comments with author, timestamp, and content`,
         inputSchema: z.object({
-            issue_id_or_key: z
+            issue_key: z
                 .union([z.string(), z.number()])
                 .describe("Issue ID or key (e.g., 'MYPROJ-123')"),
             limit: z
@@ -56,9 +56,9 @@ Returns: List of comments with author, timestamp, and content`,
             idempotentHint: true,
             openWorldHint: true,
         },
-    }, async ({ issue_id_or_key, limit, offset, order, response_format }) => {
+    }, async ({ issue_key, limit, offset, order, response_format }) => {
         try {
-            const comments = await apiGet(`/issues/${issue_id_or_key}/comments`, { count: limit, offset, order });
+            const comments = await apiGet(`/issues/${issue_key}/comments`, { count: limit, offset, order });
             if (response_format === ResponseFormat.JSON) {
                 return { content: [{ type: "text", text: jsonOutput(comments) }] };
             }
@@ -68,7 +68,7 @@ Returns: List of comments with author, timestamp, and content`,
                 };
             }
             const lines = [
-                `# Comments for ${issue_id_or_key} (${comments.length} returned)`,
+                `# Comments for ${issue_key} (${comments.length} returned)`,
                 "",
                 ...comments.flatMap((c) => [formatComment(c), ""]),
             ];
@@ -90,13 +90,13 @@ Returns: List of comments with author, timestamp, and content`,
         description: `Adds a new comment to an issue.
 
 Args:
-  - issue_id_or_key (required): Issue ID or key (e.g., "MYPROJ-123")
+  - issue_key (required): Issue ID or key (e.g., "MYPROJ-123")
   - content (required): Comment text content
   - response_format: 'markdown' (default) or 'json'
 
 Returns: The created comment with ID, author, and timestamp`,
         inputSchema: z.object({
-            issue_id_or_key: z
+            issue_key: z
                 .union([z.string(), z.number()])
                 .describe("Issue ID or key (e.g., 'MYPROJ-123')"),
             content: z
@@ -114,9 +114,9 @@ Returns: The created comment with ID, author, and timestamp`,
             idempotentHint: false,
             openWorldHint: true,
         },
-    }, async ({ issue_id_or_key, content, response_format }) => {
+    }, async ({ issue_key, content, response_format }) => {
         try {
-            const comment = await apiPost(`/issues/${issue_id_or_key}/comments`, { content });
+            const comment = await apiPost(`/issues/${issue_key}/comments`, { content });
             if (response_format === ResponseFormat.JSON) {
                 return { content: [{ type: "text", text: jsonOutput(comment) }] };
             }
@@ -138,12 +138,12 @@ Returns: The created comment with ID, author, and timestamp`,
         description: `Updates the content of an existing comment. Only the comment author can update it.
 
 Args:
-  - issue_id_or_key (required): Issue ID or key (e.g., "MYPROJ-123")
+  - issue_key (required): Issue ID or key (e.g., "MYPROJ-123")
   - comment_id (required): Numeric comment ID
   - content (required): New comment text content
   - response_format: 'markdown' (default) or 'json'`,
         inputSchema: z.object({
-            issue_id_or_key: z
+            issue_key: z
                 .union([z.string(), z.number()])
                 .describe("Issue ID or key (e.g., 'MYPROJ-123')"),
             comment_id: z
@@ -166,9 +166,9 @@ Args:
             idempotentHint: false,
             openWorldHint: true,
         },
-    }, async ({ issue_id_or_key, comment_id, content, response_format }) => {
+    }, async ({ issue_key, comment_id, content, response_format }) => {
         try {
-            const comment = await apiPatch(`/issues/${issue_id_or_key}/comments/${comment_id}`, { content });
+            const comment = await apiPatch(`/issues/${issue_key}/comments/${comment_id}`, { content });
             if (response_format === ResponseFormat.JSON) {
                 return { content: [{ type: "text", text: jsonOutput(comment) }] };
             }
@@ -190,12 +190,12 @@ Args:
         description: `Deletes a comment from an issue. Only the comment author or project admin can delete it.
 
 Args:
-  - issue_id_or_key (required): Issue ID or key (e.g., "MYPROJ-123")
+  - issue_key (required): Issue ID or key (e.g., "MYPROJ-123")
   - comment_id (required): Numeric comment ID to delete
 
 Returns: Confirmation with the deleted comment ID`,
         inputSchema: z.object({
-            issue_id_or_key: z
+            issue_key: z
                 .union([z.string(), z.number()])
                 .describe("Issue ID or key (e.g., 'MYPROJ-123')"),
             comment_id: z
@@ -210,14 +210,14 @@ Returns: Confirmation with the deleted comment ID`,
             idempotentHint: false,
             openWorldHint: true,
         },
-    }, async ({ issue_id_or_key, comment_id }) => {
+    }, async ({ issue_key, comment_id }) => {
         try {
-            const comment = await apiDelete(`/issues/${issue_id_or_key}/comments/${comment_id}`);
+            const comment = await apiDelete(`/issues/${issue_key}/comments/${comment_id}`);
             return {
                 content: [
                     {
                         type: "text",
-                        text: `Deleted comment #${comment.id} from issue ${issue_id_or_key}.`,
+                        text: `Deleted comment #${comment.id} from issue ${issue_key}.`,
                     },
                 ],
             };

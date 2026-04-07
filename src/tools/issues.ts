@@ -201,12 +201,12 @@ Args:
       description: `Returns full details of a single issue including description, status, assignee, custom fields, and attachments.
 
 Args:
-  - issue_id_or_key (required): Issue ID (number) or issue key (e.g., "MYPROJ-123")
+  - issue_key (required): Issue ID (number) or issue key (e.g., "MYPROJ-123")
   - response_format: 'markdown' (default) or 'json'
 
 Returns: Full issue with all fields including customFields array`,
       inputSchema: z.object({
-        issue_id_or_key: z
+        issue_key: z
           .union([z.string(), z.number()])
           .describe("Issue numeric ID or key (e.g., 'MYPROJ-123')"),
         response_format: z
@@ -221,9 +221,9 @@ Returns: Full issue with all fields including customFields array`,
         openWorldHint: true,
       },
     },
-    async ({ issue_id_or_key, response_format }) => {
+    async ({ issue_key, response_format }) => {
       try {
-        const issue = await apiGet<BacklogIssue>(`/issues/${issue_id_or_key}`);
+        const issue = await apiGet<BacklogIssue>(`/issues/${issue_key}`);
 
         if (response_format === ResponseFormat.JSON) {
           return { content: [{ type: "text", text: jsonOutput(issue) }] };
@@ -427,7 +427,7 @@ WORKFLOW FOR STATUS CHANGES — ALWAYS follow these steps when changing status_i
 IMPORTANT: Call backlog_get_project_config first to get valid status IDs, issue type IDs, etc.
 
 Args:
-  - issue_id_or_key (required): Issue ID or key (e.g., "MYPROJ-123")
+  - issue_key (required): Issue ID or key (e.g., "MYPROJ-123")
   - preview (optional): If true, shows current state + proposed changes WITHOUT applying. Use this before any status change to confirm with user. Default: false.
   - summary (optional): New title
   - description (optional): New description
@@ -447,7 +447,7 @@ Args:
   - comment (optional): Comment to add with this update
   - response_format: 'markdown' (default) or 'json'`,
       inputSchema: z.object({
-        issue_id_or_key: z
+        issue_key: z
           .union([z.string(), z.number()])
           .describe("Issue ID or key (e.g., 'MYPROJ-123')"),
         preview: z
@@ -547,7 +547,7 @@ Args:
       },
     },
     async ({
-      issue_id_or_key,
+      issue_key,
       preview,
       summary,
       description,
@@ -569,7 +569,7 @@ Args:
     }) => {
       try {
         // Always fetch current issue for preview, or when status is changing
-        const current = await apiGet<BacklogIssue>(`/issues/${issue_id_or_key}`);
+        const current = await apiGet<BacklogIssue>(`/issues/${issue_key}`);
 
         if (preview) {
           const lines = [
@@ -676,7 +676,7 @@ Args:
           custom_fields.forEach((cf) => { body[`customField_${cf.id}`] = cf.value; });
         }
 
-        const updated = await apiPatch<BacklogIssue>(`/issues/${issue_id_or_key}`, body);
+        const updated = await apiPatch<BacklogIssue>(`/issues/${issue_key}`, body);
 
         if (response_format === ResponseFormat.JSON) {
           return { content: [{ type: "text", text: jsonOutput(updated) }] };
@@ -698,11 +698,11 @@ Args:
       description: `Permanently deletes an issue. This action cannot be undone.
 
 Args:
-  - issue_id_or_key (required): Issue ID or key (e.g., "MYPROJ-123")
+  - issue_key (required): Issue ID or key (e.g., "MYPROJ-123")
 
 Returns: The deleted issue's key and summary as confirmation.`,
       inputSchema: z.object({
-        issue_id_or_key: z
+        issue_key: z
           .union([z.string(), z.number()])
           .describe("Issue ID or key to delete (e.g., 'MYPROJ-123')"),
       }),
@@ -713,9 +713,9 @@ Returns: The deleted issue's key and summary as confirmation.`,
         openWorldHint: true,
       },
     },
-    async ({ issue_id_or_key }) => {
+    async ({ issue_key }) => {
       try {
-        const issue = await apiDelete<BacklogIssue>(`/issues/${issue_id_or_key}`);
+        const issue = await apiDelete<BacklogIssue>(`/issues/${issue_key}`);
         return {
           content: [
             {

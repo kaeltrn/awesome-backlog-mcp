@@ -11,16 +11,16 @@ export function registerProjectTools(server) {
 Use this to get project keys (e.g., "PROJ") needed for other tools.
 
 Args:
-  - project_id_or_key (optional): Project numeric ID or key string (e.g., "MYPROJ"). Omit to list all.
+  - project_key (optional): Project key string (e.g., "MYPROJ") or numeric ID. Omit to list all.
   - archived (optional): Filter by archived status (true/false). Only applies when listing all.
   - response_format: 'markdown' (default) or 'json'
 
 Returns: id, projectKey, name, archived, textFormattingRule`,
         inputSchema: z.object({
-            project_id_or_key: z
+            project_key: z
                 .union([z.string(), z.number()])
                 .optional()
-                .describe("Project ID (number) or project key (string, e.g. 'MYPROJ')"),
+                .describe("Project key string (e.g. 'MYPROJ') or numeric ID. Omit to list all projects."),
             archived: z
                 .boolean()
                 .optional()
@@ -36,10 +36,10 @@ Returns: id, projectKey, name, archived, textFormattingRule`,
             idempotentHint: true,
             openWorldHint: true,
         },
-    }, async ({ project_id_or_key, archived, response_format }) => {
+    }, async ({ project_key, archived, response_format }) => {
         try {
-            if (project_id_or_key !== undefined) {
-                const project = await apiGet(`/projects/${project_id_or_key}`);
+            if (project_key !== undefined) {
+                const project = await apiGet(`/projects/${project_key}`);
                 if (response_format === ResponseFormat.JSON) {
                     return { content: [{ type: "text", text: jsonOutput(project) }] };
                 }
