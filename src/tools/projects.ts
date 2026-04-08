@@ -2,9 +2,10 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { apiGet } from "../services/backlog-client.js";
 import { handleApiError } from "../utils/error-handler.js";
-import { jsonOutput, truncateIfNeeded } from "../utils/formatters.js";
+import { formatDateTime, jsonOutput, truncateIfNeeded } from "../utils/formatters.js";
 import {
   ResponseFormat,
+  type BacklogActivity,
   type BacklogCategory,
   type BacklogCustomField,
   type BacklogIssueType,
@@ -202,6 +203,148 @@ Returns: { statuses, priorities, resolutions, issueTypes, categories, versions, 
           content: [
             { type: "text", text: truncateIfNeeded(lines.join("\n"), "config") },
           ],
+        };
+      } catch (error) {
+        return { content: [{ type: "text", text: handleApiError(error) }] };
+      }
+    }
+  );
+
+  server.registerTool(
+    "backlog_get_project_activities",
+    {
+      title: "Get Backlog Project Activities",
+      description: `Returns the recent activity log for a project — issues created/updated, comments, PRs, wiki changes, etc.
+
+Useful for standup summaries, sprint retrospectives, and monitoring project health.
+
+Activity type IDs:
+  1=Issue created, 2=Issue updated, 3=Issue commented, 4=Issue deleted
+  5=Wiki created, 6=Wiki updated, 7=Wiki deleted
+  12=Git pushed, 13=Git repository created
+  14=Issue bulk-updated, 15=Project joined, 16=Project left
+  18=PR created, 19=PR updated, 20=PR commented, 21=PR merged
+
+Args:
+  - project_key (required): Project key string (e.g., "MYPROJ") or numeric project ID
+  - activity_type_id (optional): Filter by activity type ID(s) — single number or array
+  - count (optional): Max results to return (1-100, default 20)
+  - min_id (optional): Return activities with ID greater than this (pagination forward)
+  - max_id (optional): Return activities with ID less than this (pagination backward)
+  - order (optional): "asc" or "desc" (default "desc" = newest first)
+  - response_format: 'markdown' (default) or 'json'`,
+      inputSchema: z.object({
+        project_key: z
+          .union([z.string(), z.number()])
+          .describe("Project key string (e.g., 'MYPROJ') or numeric project ID"),
+        activity_type_id: z
+          .union([z.number().int().positive(), z.array(z.number().int().positive())])
+          .optional()
+          .describe("Filter by activity type ID(s). See description for type codes."),
+        count: z
+          .number()
+          .int()
+          .min(1)
+          .max(100)
+          .default(20)
+          .describe("Max results to return (1-100, default 20)"),
+        min_id: z
+          .number()
+          .int()
+          .positive()
+          .optional()
+          .describe("Return activities with ID greater than this (pagination: get newer)"),
+        max_id: z
+          .number()
+          .int()
+          .positive()
+          .optional()
+          .describe("Return activities with ID less than this (pagination: get older)"),
+        order: z
+          .enum(["asc", "desc"])
+          .default("desc")
+          .describe("Sort order: 'desc' (newest first, default) or 'asc'"),
+        response_format: z
+          .nativeEnum(ResponseFormat)
+          .default(ResponseFormat.MARKDOWN)
+          .describe("Output format: 'markdown' or 'json'"),
+      }),
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
+    },
+    async ({ project_key, activity_type_id, count, min_id, max_id, order, response_format }) => {
+      try {
+        const params: Record<string, unknown> = { count, order };
+        if (min_id !== undefined) params["minId"] = min_id;
+        if (max_id !== undefined) params["maxId"] = max_id;
+
+        const typeIds = Array.isArray(activity_type_id)
+          ? activity_type_id
+          : activity_type_id !== undefined
+          ? [activity_type_id]
+          : undefined;
+        typeIds?.forEach((id, i) => { params[`activityTypeId[${i}]`] = id; });
+
+        const activities = await apiGet<BacklogActivity[]>(
+          `/projects/${project_key}/activities`,
+          params
+        );
+
+        if (response_format === ResponseFormat.JSON) {
+          return { content: [{ type: "text", text: jsonOutput(activities) }] };
+        }
+
+        if (activities.length === 0) {
+          return {
+            content: [{ type: "text", text: "No activities found for this project." }],
+          };
+        }
+
+        const activityTypeLabel: Record<number, string> = {
+          1: "Issue created", 2: "Issue updated", 3: "Issue commented", 4: "Issue deleted",
+          5: "Wiki created", 6: "Wiki updated", 7: "Wiki deleted",
+          8: "File added", 9: "File updated", 10: "File deleted",
+          11: "SVN committed", 12: "Git pushed", 13: "Git repo created",
+          14: "Issues bulk-updated", 15: "Member joined", 16: "Member left",
+          17: "Notification", 18: "PR created", 19: "PR updated", 20: "PR commented",
+          21: "PR merged",
+        };
+
+        const lines = [`# Project Activities: ${project_key} (${activities.length} returned)`, ""];
+
+        for (const a of activities) {
+          const typeLabel = activityTypeLabel[a.type] ?? `Type ${a.type}`;
+          const content = a.content;
+          let detail = "";
+
+          if (content.summary) {
+            detail = content.key_id
+              ? `[${project_key}-${content.key_id}] ${content.summary}`
+              : content.summary;
+          } else if (content.name) {
+            detail = String(content.name);
+          }
+
+          if (content.comment?.content) {
+            detail += detail ? ` — "${content.comment.content.slice(0, 80)}"` : `"${content.comment.content.slice(0, 80)}"`;
+          }
+
+          lines.push(`### ${typeLabel}${detail ? `: ${detail}` : ""}`);
+          lines.push(`**By**: ${a.createdUser.name} | **At**: ${formatDateTime(a.created)} | ID: ${a.id}`);
+          lines.push("");
+        }
+
+        if (activities.length === count) {
+          const lastId = activities[activities.length - 1].id;
+          lines.push(`> To see older activities, use max_id: ${lastId}`);
+        }
+
+        return {
+          content: [{ type: "text", text: truncateIfNeeded(lines.join("\n"), "activities") }],
         };
       } catch (error) {
         return { content: [{ type: "text", text: handleApiError(error) }] };

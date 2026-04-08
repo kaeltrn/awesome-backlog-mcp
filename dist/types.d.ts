@@ -190,6 +190,41 @@ export interface BacklogPullRequest {
     updatedUser: BacklogUser;
     updated: string;
 }
+export interface BacklogPullRequestComment {
+    id: number;
+    content: string | null;
+    changeLog: unknown[] | null;
+    createdUser: BacklogUser;
+    created: string;
+    updated: string;
+    stars: unknown[];
+    notifications: unknown[];
+}
+export interface BacklogActivity {
+    id: number;
+    project: BacklogProject;
+    type: number;
+    content: {
+        id?: number;
+        key_id?: number;
+        summary?: string;
+        description?: string;
+        comment?: {
+            id: number;
+            content: string;
+        };
+        changes?: Array<{
+            field: string;
+            new_value: string;
+            old_value: string;
+            type: string;
+        }>;
+        [key: string]: unknown;
+    };
+    notifications: unknown[];
+    createdUser: BacklogUser;
+    created: string;
+}
 export interface BacklogNotification {
     id: number;
     alreadyRead: boolean;

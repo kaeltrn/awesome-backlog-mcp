@@ -2,7 +2,7 @@
 /**
  * Backlog MCP Server
  *
- * Provides 23 tools to interact with the Backlog project management API,
+ * Provides 28 tools to interact with the Backlog project management API,
  * covering issues, comments, wikis, git repositories, notifications, and more.
  *
  * Required environment variables:

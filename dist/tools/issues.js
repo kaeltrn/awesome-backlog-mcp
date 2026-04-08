@@ -57,7 +57,12 @@ Args:
   - status_id (optional): Filter by status ID — single number (e.g. 1) or array (e.g. [1,2]). Use backlog_get_project_config to get IDs.
   - assignee_id (optional): Filter by assignee user ID — single number or array.
   - issue_type_id (optional): Filter by issue type ID — single number or array. Use backlog_get_project_config to get IDs.
+  - milestone_id (optional): Filter by milestone ID — single number or array. Use backlog_get_project_config to get IDs.
   - keyword (optional): Full-text search keyword
+  - updated_since (optional): Only issues updated on or after this date (YYYY-MM-DD)
+  - updated_until (optional): Only issues updated on or before this date (YYYY-MM-DD)
+  - due_date_since (optional): Only issues with due date on or after this date (YYYY-MM-DD)
+  - due_date_until (optional): Only issues with due date on or before this date (YYYY-MM-DD)
   - count_only (optional): If true, returns only the count of matching issues
   - limit (optional): Max results (1-100, default 20)
   - offset (optional): Pagination offset (default 0)
@@ -72,7 +77,28 @@ Args:
             status_id: numOrArray.describe("Filter by status ID(s). Pass a single number (e.g. 1) or array (e.g. [1,2]). Use backlog_get_project_config to get valid IDs."),
             assignee_id: numOrArray.describe("Filter by assignee user ID(s). Pass a single number or array."),
             issue_type_id: numOrArray.describe("Filter by issue type ID(s). Pass a single number or array. Use backlog_get_project_config to get valid IDs."),
+            milestone_id: numOrArray.describe("Filter by milestone ID(s). Pass a single number or array. Use backlog_get_project_config to get valid IDs."),
             keyword: z.string().optional().describe("Full-text search keyword"),
+            updated_since: z
+                .string()
+                .regex(/^\d{4}-\d{2}-\d{2}$/)
+                .optional()
+                .describe("Only issues updated on or after this date (YYYY-MM-DD)"),
+            updated_until: z
+                .string()
+                .regex(/^\d{4}-\d{2}-\d{2}$/)
+                .optional()
+                .describe("Only issues updated on or before this date (YYYY-MM-DD)"),
+            due_date_since: z
+                .string()
+                .regex(/^\d{4}-\d{2}-\d{2}$/)
+                .optional()
+                .describe("Only issues with due date on or after this date (YYYY-MM-DD)"),
+            due_date_until: z
+                .string()
+                .regex(/^\d{4}-\d{2}-\d{2}$/)
+                .optional()
+                .describe("Only issues with due date on or before this date (YYYY-MM-DD)"),
             count_only: z
                 .boolean()
                 .optional()
@@ -109,7 +135,7 @@ Args:
             idempotentHint: true,
             openWorldHint: true,
         },
-    }, async ({ project_key, status_id, assignee_id, issue_type_id, keyword, count_only, limit, offset, sort, order, response_format, }) => {
+    }, async ({ project_key, status_id, assignee_id, issue_type_id, milestone_id, keyword, updated_since, updated_until, due_date_since, due_date_until, count_only, limit, offset, sort, order, response_format, }) => {
         try {
             const params = { count: limit, offset, order };
             // Resolve project key → numeric project ID (Backlog issues API only accepts projectId[])
@@ -121,10 +147,19 @@ Args:
             toArray(status_id)?.forEach((id, i) => { params[`statusId[${i}]`] = id; });
             toArray(assignee_id)?.forEach((id, i) => { params[`assigneeId[${i}]`] = id; });
             toArray(issue_type_id)?.forEach((id, i) => { params[`issueTypeId[${i}]`] = id; });
+            toArray(milestone_id)?.forEach((id, i) => { params[`milestoneId[${i}]`] = id; });
             if (keyword)
                 params["keyword"] = keyword;
             if (sort)
                 params["sort"] = sort;
+            if (updated_since)
+                params["updatedSince"] = updated_since;
+            if (updated_until)
+                params["updatedUntil"] = updated_until;
+            if (due_date_since)
+                params["dueDateSince"] = due_date_since;
+            if (due_date_until)
+                params["dueDateUntil"] = due_date_until;
             if (count_only) {
                 const result = await apiGet("/issues/count", params);
                 return { content: [{ type: "text", text: `**Issue count**: ${result.count}` }] };
