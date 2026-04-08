@@ -1,9 +1,69 @@
 import { z } from "zod";
 import FormData from "form-data";
 import fs from "fs";
-import { backlogClient } from "../services/backlog-client.js";
+import { backlogClient, apiGet } from "../services/backlog-client.js";
 import { handleApiError } from "../utils/error-handler.js";
+import { formatDateTime, jsonOutput } from "../utils/formatters.js";
+import { ResponseFormat } from "../types.js";
 export function registerAttachmentTools(server) {
+    server.registerTool("backlog_get_issue_attachments", {
+        title: "Get Issue Attachments",
+        description: `Returns the list of attachments on an issue, with download URLs.
+
+The download URLs can be opened directly in a browser to view or download the file.
+
+Args:
+  - issue_key (required): Issue ID or key (e.g., "MYPROJ-123")
+  - response_format: 'markdown' (default) or 'json'
+
+Returns: id, name, size, uploader, uploaded date, and a direct download URL for each attachment`,
+        inputSchema: z.object({
+            issue_key: z
+                .union([z.string(), z.number()])
+                .describe("Issue ID or key (e.g., 'MYPROJ-123')"),
+            response_format: z
+                .nativeEnum(ResponseFormat)
+                .default(ResponseFormat.MARKDOWN)
+                .describe("Output format: 'markdown' or 'json'"),
+        }),
+        annotations: {
+            readOnlyHint: true,
+            destructiveHint: false,
+            idempotentHint: true,
+            openWorldHint: true,
+        },
+    }, async ({ issue_key, response_format }) => {
+        try {
+            const attachments = await apiGet(`/issues/${issue_key}/attachments`);
+            if (attachments.length === 0) {
+                return {
+                    content: [{ type: "text", text: "No attachments found for this issue." }],
+                };
+            }
+            const host = process.env["BACKLOG_HOST"];
+            const apiKey = process.env["BACKLOG_API_KEY"];
+            const withUrls = attachments.map((a) => ({
+                ...a,
+                download_url: `https://${host}/api/v2/issues/${issue_key}/attachments/${a.id}?apiKey=${apiKey}`,
+            }));
+            if (response_format === ResponseFormat.JSON) {
+                return { content: [{ type: "text", text: jsonOutput(withUrls) }] };
+            }
+            const lines = [`# Attachments for ${issue_key} (${attachments.length})`, ""];
+            for (const a of withUrls) {
+                lines.push(`### ${a.name}`);
+                lines.push(`- **ID**: ${a.id}`);
+                lines.push(`- **Size**: ${(a.size / 1024).toFixed(1)} KB`);
+                lines.push(`- **Uploaded by**: ${a.createdUser.name} on ${formatDateTime(a.created)}`);
+                lines.push(`- **Download URL**: ${a.download_url}`);
+                lines.push("");
+            }
+            return { content: [{ type: "text", text: lines.join("\n") }] };
+        }
+        catch (error) {
+            return { content: [{ type: "text", text: handleApiError(error) }] };
+        }
+    });
     server.registerTool("backlog_upload_attachment", {
         title: "Upload Attachment to Backlog",
         description: `Uploads a file as an attachment. The returned attachment ID can then be used when creating or updating issues.
