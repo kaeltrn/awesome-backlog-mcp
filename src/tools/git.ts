@@ -51,10 +51,10 @@ Args:
 Returns: id, name, httpUrl, sshUrl, description, pushedAt`,
       inputSchema: z.object({
         project_id_or_key: z
-          .union([z.string(), z.number()])
+          .string()
           .describe("Project ID or key (e.g., 'MYPROJ')"),
         repo_id_or_name: z
-          .union([z.string(), z.number()])
+          .string()
           .optional()
           .describe("Repository ID or name. Omit to list all repositories."),
         response_format: z
@@ -126,10 +126,10 @@ Args:
   - response_format: 'markdown' (default) or 'json'`,
       inputSchema: z.object({
         project_id_or_key: z
-          .union([z.string(), z.number()])
+          .string()
           .describe("Project ID or key (e.g., 'MYPROJ')"),
         repo_id_or_name: z
-          .union([z.string(), z.number()])
+          .string()
           .describe("Repository ID or name"),
         pr_number: z
           .number()
@@ -235,7 +235,7 @@ Args:
     "backlog_add_pull_request",
     {
       title: "Create Backlog Pull Request",
-      description: `Creates a new pull request in a git repository.
+      description: `Creates a new pull request in a repository.
 
 Args:
   - project_id_or_key (required): Project ID or key (e.g., "MYPROJ")
@@ -249,10 +249,10 @@ Args:
   - response_format: 'markdown' (default) or 'json'`,
       inputSchema: z.object({
         project_id_or_key: z
-          .union([z.string(), z.number()])
+          .string()
           .describe("Project ID or key (e.g., 'MYPROJ')"),
         repo_id_or_name: z
-          .union([z.string(), z.number()])
+          .string()
           .describe("Repository ID or name"),
         summary: z
           .string()
@@ -336,7 +336,7 @@ Args:
     "backlog_update_pull_request",
     {
       title: "Update Backlog Pull Request",
-      description: `Updates an existing pull request. Only provide fields you want to change.
+      description: `Updates an existing pull request.
 
 Args:
   - project_id_or_key (required): Project ID or key (e.g., "MYPROJ")
@@ -351,10 +351,10 @@ Args:
   - response_format: 'markdown' (default) or 'json'`,
       inputSchema: z.object({
         project_id_or_key: z
-          .union([z.string(), z.number()])
+          .string()
           .describe("Project ID or key (e.g., 'MYPROJ')"),
         repo_id_or_name: z
-          .union([z.string(), z.number()])
+          .string()
           .describe("Repository ID or name"),
         pr_number: z
           .number()
@@ -454,10 +454,10 @@ Args:
   - response_format: 'markdown' (default) or 'json'`,
       inputSchema: z.object({
         project_id_or_key: z
-          .union([z.string(), z.number()])
+          .string()
           .describe("Project ID or key (e.g., 'MYPROJ')"),
         repo_id_or_name: z
-          .union([z.string(), z.number()])
+          .string()
           .describe("Repository ID or name"),
         pr_number: z
           .number()
@@ -556,10 +556,10 @@ Args:
 Returns: The created comment with ID, author, and timestamp`,
       inputSchema: z.object({
         project_id_or_key: z
-          .union([z.string(), z.number()])
+          .string()
           .describe("Project ID or key (e.g., 'MYPROJ')"),
         repo_id_or_name: z
-          .union([z.string(), z.number()])
+          .string()
           .describe("Repository ID or name"),
         pr_number: z
           .number()

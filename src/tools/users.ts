@@ -85,7 +85,7 @@ Returns: id, userId, name, mailAddress, roleType, lastLoginTime`,
           .optional()
           .describe("Numeric user ID to fetch a single user. Omit to list users."),
         project_key: z
-          .union([z.string(), z.number()])
+          .string()
           .optional()
           .describe("Project key (e.g. 'MYPROJ') or numeric ID to list only users in that project."),
         response_format: z

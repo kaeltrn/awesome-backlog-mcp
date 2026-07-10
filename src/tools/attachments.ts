@@ -23,8 +23,8 @@ Args:
 Returns: id, name, size, uploader, uploaded date, and a direct download URL for each attachment`,
       inputSchema: z.object({
         issue_key: z
-          .union([z.string(), z.number()])
-          .describe("Issue ID or key (e.g., 'MYPROJ-123')"),
+          .string()
+          .describe("Issue ID (number) or key (e.g., 'MYPROJ-123')"),
         response_format: z
           .nativeEnum(ResponseFormat)
           .default(ResponseFormat.MARKDOWN)

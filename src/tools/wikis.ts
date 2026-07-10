@@ -42,7 +42,7 @@ Returns:
   - Single mode: Full page including content`,
       inputSchema: z.object({
         project_id_or_key: z
-          .union([z.string(), z.number()])
+          .string()
           .optional()
           .describe("Project ID or key (required when listing pages, e.g., 'MYPROJ')"),
         wiki_id: z

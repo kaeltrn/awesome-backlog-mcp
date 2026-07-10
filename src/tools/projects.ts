@@ -33,7 +33,7 @@ Args:
 Returns: id, projectKey, name, archived, textFormattingRule`,
       inputSchema: z.object({
         project_key: z
-          .union([z.string(), z.number()])
+          .string()
           .optional()
           .describe("Project key string (e.g. 'MYPROJ') or numeric ID. Omit to list all projects."),
         archived: z
@@ -107,9 +107,9 @@ Returns: id, projectKey, name, archived, textFormattingRule`,
     "backlog_get_project_config",
     {
       title: "Get Backlog Project Configuration",
-      description: `Returns all configuration for a project in a single call: statuses, priorities, resolutions, issue types, categories, milestones/versions, and custom fields (with their types and list options).
+      description: `Returns all project configuration in one call: statuses, issue types, priorities, resolutions, categories, versions/milestones, and custom fields.
 
-IMPORTANT: Always call this BEFORE creating or updating issues so you know valid status IDs, issue type IDs, category IDs, and custom field IDs/values.
+Use this to discover valid IDs before creating or updating issues.
 
 Args:
   - project_key (required): Project key string (e.g., "MYPROJ") or numeric project ID
@@ -119,7 +119,7 @@ Returns: { statuses, priorities, resolutions, issueTypes, categories, versions, 
   - customFields includes: id, name, typeId, required, items (for list-type fields)`,
       inputSchema: z.object({
         project_key: z
-          .union([z.string(), z.number()])
+          .string()
           .describe("Project key string (e.g., 'MYPROJ') or numeric project ID"),
         response_format: z
           .nativeEnum(ResponseFormat)
@@ -235,7 +235,7 @@ Args:
   - response_format: 'markdown' (default) or 'json'`,
       inputSchema: z.object({
         project_key: z
-          .union([z.string(), z.number()])
+          .string()
           .describe("Project key string (e.g., 'MYPROJ') or numeric project ID"),
         activity_type_id: z
           .union([z.number().int().positive(), z.array(z.number().int().positive())])

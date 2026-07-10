@@ -32,8 +32,8 @@ Args:
 Returns: List of comments with author, timestamp, and content`,
       inputSchema: z.object({
         issue_key: z
-          .union([z.string(), z.number()])
-          .describe("Issue ID or key (e.g., 'MYPROJ-123')"),
+          .string()
+          .describe("Issue ID (number) or key (e.g., 'MYPROJ-123')"),
         count: z
           .number()
           .int()
@@ -126,8 +126,8 @@ Args:
 Returns: The created comment with ID, author, and timestamp`,
       inputSchema: z.object({
         issue_key: z
-          .union([z.string(), z.number()])
-          .describe("Issue ID or key (e.g., 'MYPROJ-123')"),
+          .string()
+          .describe("Issue ID (number) or key (e.g., 'MYPROJ-123')"),
         content: z
           .string()
           .min(1)
@@ -182,8 +182,8 @@ Args:
   - response_format: 'markdown' (default) or 'json'`,
       inputSchema: z.object({
         issue_key: z
-          .union([z.string(), z.number()])
-          .describe("Issue ID or key (e.g., 'MYPROJ-123')"),
+          .string()
+          .describe("Issue ID (number) or key (e.g., 'MYPROJ-123')"),
         comment_id: z
           .number()
           .int()
@@ -243,8 +243,8 @@ Args:
 Returns: Confirmation with the deleted comment ID`,
       inputSchema: z.object({
         issue_key: z
-          .union([z.string(), z.number()])
-          .describe("Issue ID or key (e.g., 'MYPROJ-123')"),
+          .string()
+          .describe("Issue ID (number) or key (e.g., 'MYPROJ-123')"),
         comment_id: z
           .number()
           .int()

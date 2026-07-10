@@ -239,14 +239,15 @@ Args:
       description: `Returns full details of a single issue including description, status, assignee, custom fields, and attachments.
 
 Args:
-  - issue_key (required): Issue ID (number) or issue key (e.g., "MYPROJ-123")
+  - issue_key (required): Issue ID (number) or issue key (e.g., "MYPROJ-123", "ATMA_MYKOMON-456")
   - response_format: 'markdown' (default) or 'json'
 
 Returns: Full issue with all fields including customFields array`,
       inputSchema: z.object({
         issue_key: z
-          .union([z.string(), z.number()])
-          .describe("Issue numeric ID or key (e.g., 'MYPROJ-123')"),
+          .string()
+          .min(1)
+          .describe("Issue ID (number) or key (e.g., 'MYPROJ-123', 'ATMA_MYKOMON-456')"),
         response_format: z
           .nativeEnum(ResponseFormat)
           .default(ResponseFormat.MARKDOWN)
@@ -486,8 +487,9 @@ Args:
   - response_format: 'markdown' (default) or 'json'`,
       inputSchema: z.object({
         issue_key: z
-          .union([z.string(), z.number()])
-          .describe("Issue ID or key (e.g., 'MYPROJ-123')"),
+          .string()
+          .min(1)
+          .describe("Issue ID (number) or key (e.g., 'MYPROJ-123', 'ATMA_MYKOMON-456')"),
         preview: z
           .boolean()
           .default(false)
@@ -741,8 +743,9 @@ Args:
 Returns: The deleted issue's key and summary as confirmation.`,
       inputSchema: z.object({
         issue_key: z
-          .union([z.string(), z.number()])
-          .describe("Issue ID or key to delete (e.g., 'MYPROJ-123')"),
+          .string()
+          .min(1)
+          .describe("Issue ID (number) or key (e.g., 'MYPROJ-123', 'ATMA_MYKOMON-456')"),
       }),
       annotations: {
         readOnlyHint: false,
